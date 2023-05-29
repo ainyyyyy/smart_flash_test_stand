@@ -8,108 +8,16 @@
 CollectData::CollectData(QObject *parent) : QObject(parent)
 {
 }
-/*
-int CollectData::send_to_stm(HANDLE hSerial, std::string strr){
-
-    std::cout << strr << std::endl;
-    char *cstr = &(strr[0]);
-    std::cout << *cstr << std::endl;
-    // DWORD data = DWORD(TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384);
-    char buffer[50];
-    char str[50];
-    strcpy(buffer, cstr);
-
-    std::cout << buffer << std::endl;
-
-    std::cout << *buffer << std::endl;
-    // itoa(data,buffer,20);
-    DCB dcbSerialParams = { 0 };
-    dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-    if(!GetCommState(hSerial, &dcbSerialParams)){
-        std::cout << "getting state error\n";
-    }
-    dcbSerialParams.BaudRate = CBR_9600;
-    dcbSerialParams.ByteSize = 8;
-    dcbSerialParams.StopBits = ONESTOPBIT;
-    dcbSerialParams.Parity = NOPARITY;
-    if(!SetCommState(hSerial, &dcbSerialParams)){
-        std::cout << "error setting serial port state\n";
-    }
-    // char data[] = {dbcc_size};  // строка для передачи
-    DWORD dwSize = sizeof(buffer);   // размер этой строки
-    DWORD dwBytesWritten;    // тут будет количество собственно переданных байт
-    DWORD dwBytesRead;
-
-
-    uint8_t firstDigit[50], secondDigit[50];
-
-
-    char *space = strstr(buffer, " ");
-    int digitLen = space - buffer;
-    int otherStringLen = strlen(buffer) - digitLen - 1;
-    snprintf((char*)firstDigit, digitLen + 1, buffer);
-
-    char rest_of_rx_buffer[50];
-    //snprintf(rest_of_rx_buffer, otherStringLen + 1, &space[1]);
-    strncpy(rest_of_rx_buffer, &space[1], otherStringLen + 1);
-
-    space = strstr(rest_of_rx_buffer, " ");
-    digitLen = space - rest_of_rx_buffer;
-    //otherStringLen = strlen(rest_of_rx_buffer) - digitLen - 1;
-    snprintf((char*)secondDigit, digitLen + 1, rest_of_rx_buffer);
-    strncpy((char*)thirdDigit, &space[1], otherStringLen + 1);
-
-
-    std::cout << "first digit = " << firstDigit << std::endl;
-
-    std::cout << "snd digit = " << secondDigit << std::endl;
-
-
-    QString string1((char*)firstDigit), string2((char*)secondDigit), string3((char*)thirdDigit);
-    emit valueChanged(string1, string2, string3);
-
-
-    std::cout<<buffer<<"       write"<<std::endl<<std::endl;
-    BOOL iRet = WriteFile(hSerial, buffer, dwSize, &dwBytesWritten, NULL);
-    // std::cout<<iRet<<std::endl;
-    if (iRet){
-    BOOL oRet = ReadFile(hSerial, str, dwSize, &dwBytesRead, NULL);
-    // std::cout<<oRet<<std::endl;
-    std::cout<<str<<"       read"<<std::endl<<std::endl;
-
-
-    memset(str, 0, sizeof(str));
-
-
-
-    oRet = ReadFile(hSerial, str, dwSize, &dwBytesRead, NULL);
-    // std::cout<<oRet<<std::endl;
-    std::cout<<str<<"       read"<<std::endl<<std::endl;
-
-
-    memset(str, 0, sizeof(str));
-
-    oRet = ReadFile(hSerial, str, dwSize, &dwBytesRead, NULL);
-    // std::cout<<oRet<<std::endl;
-    std::cout<<str<<"       read"<<std::endl<<std::endl;
-
-
-    memset(str, 0, sizeof(str));
-
-    }
-    return 0;
-}*/
 
 void CollectData::main_process()
 {
-
+///////////////////////////////////////
     float convert_rx_buff;
     float rx_buffer1 = 0;
     float rx_buffer2 = 0;
     float a;
-    char Dataa_per[20];
     float all = 100;
-
+////////////////////////////////////////
     std::string strr;
     //strr += '\r';
     //strr += '\n';
@@ -122,7 +30,7 @@ void CollectData::main_process()
     DWORD bytesRead, bytesWrite;
     HANDLE hComm, hSerial;
 
-  LPCTSTR sPortName = _T("COM5");
+  LPCTSTR sPortName = _T("COM9");
 hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     // hComm = CreateFileA("\\\\.\\COM3",
     // 		    GENERIC_READ | GENERIC_WRITE,
@@ -147,7 +55,7 @@ unsigned __int64 TotalNumberOfFreeBytes;
 ULARGE_INTEGER free;
 
 
-char *path = "C:\\Users\\User\\Desktop\\project\\over2";
+char *path = "D:\\";
   std::cout << "watching for changes... " << path << std::endl;
 
   HANDLE file = CreateFileA(path,
@@ -225,7 +133,7 @@ char *path = "C:\\Users\\User\\Desktop\\project\\over2";
                     DWORD dwBytesWritten;    // тут будет количество собственно переданных байт
                     DWORD dwBytesRead;
 
-////////////////////////////////////////////////////////////////временно
+////////////////////////////////////////////////////////////////
                     a = ((float)(TotalNumberOfBytes - TotalNumberOfFreeBytes)/(float)(TotalNumberOfBytes))/1000;
                     convert_rx_buff += fabs(a*1000 - rx_buffer2);
                             all -= fabs(a - rx_buffer1);
@@ -237,14 +145,11 @@ char *path = "C:\\Users\\User\\Desktop\\project\\over2";
                             //sprintf((char*)str2,"%.3f", convert_rx_buff);
                             sprintf((char*)str1,"%.5f", all);
                           //strcpy((char*)str1,uint64_to_string(convert_rx_buff));
-                          memset(Dataa_per, 0, sizeof(Dataa_per));
-                          sprintf((char*)Dataa_per,"%s", (char*)str1);
-                          std::cout << Dataa_per << " " << all << std::endl;
+                          memset(str, 0, sizeof(str));
+                          sprintf((char*)str,"%s", (char*)str1);
+                          std::cout << str << " " << all << std::endl;
 ////////////////////////////////////////////////////////////////
-                          emit valueChanged(TotalNumberOfBytes,
-                                            TotalNumberOfBytes - TotalNumberOfFreeBytes,
-                                            TotalNumberOfFreeBytes,
-                                            atof(Dataa_per));
+
 /*
                     std::cout<<buffer<<"       write"<<std::endl<<std::endl;
                     BOOL iRet = WriteFile(hSerial, buffer, dwSize, &dwBytesWritten, NULL);
@@ -254,6 +159,11 @@ char *path = "C:\\Users\\User\\Desktop\\project\\over2";
                     // std::cout<<oRet<<std::endl;
                     std::cout<<str<<"       read"<<std::endl<<std::endl;
                     }
+*/
+                          emit valueChanged(TotalNumberOfBytes,
+                                            TotalNumberOfBytes - TotalNumberOfFreeBytes,
+                                            TotalNumberOfFreeBytes,
+                                            atof(str));
 /*
                     std::cout << "wr:" << std::endl;
                     strr = std::to_string(TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384) + " "

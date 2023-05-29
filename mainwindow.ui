@@ -201,7 +201,7 @@ hr { height: 1px; border-width: 0; }
     <property name="geometry">
      <rect>
       <x>150</x>
-      <y>10</y>
+      <y>11</y>
       <width>341</width>
       <height>101</height>
      </rect>
@@ -262,8 +262,8 @@ color: rgb(53, 53, 53);</string>
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>20</y>
+      <x>25</x>
+      <y>24</y>
       <width>111</width>
       <height>70</height>
      </rect>
@@ -279,7 +279,7 @@ color: rgb(53, 53, 53);</string>
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>../../иыгфарпышлуявц (3)/image_(13)-GdBlLtSll-transformed.png</pixmap>
+     <pixmap resource="res.qrc">:/image_(13)-GdBlLtSll-transformed.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -305,6 +305,8 @@ color: rgb(53, 53, 53);</string>
    <header>QtCharts</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
  <connections/>
 </ui>
