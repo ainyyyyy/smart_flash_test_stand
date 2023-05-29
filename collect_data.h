@@ -15,10 +15,10 @@ public:
 
 public slots:
     void main_process();
-    int send_to_stm(HANDLE hSerial, std::string strr);
+    //int send_to_stm(HANDLE hSerial, std::string strr);
 
 signals:
-    void valueChanged(QString value);
+    void valueChanged(float value1, float value2, float value3, float value4);
     void finished();
 };
 

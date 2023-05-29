@@ -3,11 +3,12 @@
 #include <iostream>
 #include <windows.h>
 #include "tchar.h"
+#include <string.h>
 
 CollectData::CollectData(QObject *parent) : QObject(parent)
 {
 }
-
+/*
 int CollectData::send_to_stm(HANDLE hSerial, std::string strr){
 
     std::cout << strr << std::endl;
@@ -39,7 +40,7 @@ int CollectData::send_to_stm(HANDLE hSerial, std::string strr){
     DWORD dwBytesWritten;    // тут будет количество собственно переданных байт
     DWORD dwBytesRead;
 
-/*
+
     uint8_t firstDigit[50], secondDigit[50];
 
 
@@ -56,12 +57,17 @@ int CollectData::send_to_stm(HANDLE hSerial, std::string strr){
     digitLen = space - rest_of_rx_buffer;
     //otherStringLen = strlen(rest_of_rx_buffer) - digitLen - 1;
     snprintf((char*)secondDigit, digitLen + 1, rest_of_rx_buffer);
+    strncpy((char*)thirdDigit, &space[1], otherStringLen + 1);
 
 
-    cout << "first digit = " << firstDigit << endl;
+    std::cout << "first digit = " << firstDigit << std::endl;
 
-    cout << "snd digit = " << secondDigit << endl;
-*/
+    std::cout << "snd digit = " << secondDigit << std::endl;
+
+
+    QString string1((char*)firstDigit), string2((char*)secondDigit), string3((char*)thirdDigit);
+    emit valueChanged(string1, string2, string3);
+
 
     std::cout<<buffer<<"       write"<<std::endl<<std::endl;
     BOOL iRet = WriteFile(hSerial, buffer, dwSize, &dwBytesWritten, NULL);
@@ -92,10 +98,18 @@ int CollectData::send_to_stm(HANDLE hSerial, std::string strr){
 
     }
     return 0;
-}
+}*/
 
 void CollectData::main_process()
 {
+
+    float convert_rx_buff;
+    float rx_buffer1 = 0;
+    float rx_buffer2 = 0;
+    float a;
+    char Dataa_per[20];
+    float all = 100;
+
     std::string strr;
     //strr += '\r';
     //strr += '\n';
@@ -171,12 +185,100 @@ char *path = "C:\\Users\\User\\Desktop\\project\\over2";
                     (PULARGE_INTEGER)&TotalNumberOfBytes,
                     (PULARGE_INTEGER)&TotalNumberOfFreeBytes);
 
+//new code
+                    char *cstr = &(strr[0]);
+                    // DWORD data = DWORD(TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384);
+                    char buffer[50];
+                    char buffer_mem_1[15];
+                    char buffer_free[15];
+                    char buffer_occupied[15];
+                    char buffer_all[15];
+                    char str[20];
+                    //float cycle = 100000;
+                    // strcpy(buffer, cstr);
+                      // strcat(buffer, "\n\n");
+                    snprintf(buffer_mem_1, sizeof buffer_mem_1, "%.10f",(((float)(TotalNumberOfBytes - TotalNumberOfFreeBytes)/(float)(TotalNumberOfBytes))/1000));
+                    snprintf(buffer_free, sizeof buffer_free, "%llu",(TotalNumberOfFreeBytes));
+                    snprintf(buffer_occupied, sizeof buffer_occupied, "%llu",((TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384)));
+                    snprintf(buffer_all, sizeof buffer_all, "%llu",(TotalNumberOfBytes));
+                    sprintf(buffer,"%s %s", buffer_mem_1,buffer_free);
+                    sprintf(buffer,"%s %s", buffer,buffer_occupied);
+                    sprintf(buffer,"%s %s", buffer,buffer_all);
+                    // strcat(buffer, buffer_mem);
+                    std::cout<<buffer<<std::endl;
+
+                    // itoa(data,buffer,20);
+                    DCB dcbSerialParams = { 0 };
+                    dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+                    if(!GetCommState(hSerial, &dcbSerialParams)){
+                        std::cout << "getting state error\n";
+                    }
+                    dcbSerialParams.BaudRate = CBR_115200;
+                    dcbSerialParams.ByteSize = 8;
+                    dcbSerialParams.StopBits = ONESTOPBIT;
+                    dcbSerialParams.Parity = NOPARITY;
+                    if(!SetCommState(hSerial, &dcbSerialParams)){
+                        std::cout << "error setting serial port state\n";
+                    }
+                    // char data[] = {dbcc_size};  // строка для передачи
+                    DWORD dwSize = sizeof(buffer);   // размер этой строки
+                    DWORD dwBytesWritten;    // тут будет количество собственно переданных байт
+                    DWORD dwBytesRead;
+
+////////////////////////////////////////////////////////////////временно
+                    a = ((float)(TotalNumberOfBytes - TotalNumberOfFreeBytes)/(float)(TotalNumberOfBytes))/1000;
+                    convert_rx_buff += fabs(a*1000 - rx_buffer2);
+                            all -= fabs(a - rx_buffer1);
+                          rx_buffer1 = a;
+                            rx_buffer2 = a*1000;
+                          uint8_t str1[20];
+                         // uint8_t str2[20];
+                            //strcpy((char*)str1,uint64_to_string(convert_rx_buff));
+                            //sprintf((char*)str2,"%.3f", convert_rx_buff);
+                            sprintf((char*)str1,"%.5f", all);
+                          //strcpy((char*)str1,uint64_to_string(convert_rx_buff));
+                          memset(Dataa_per, 0, sizeof(Dataa_per));
+                          sprintf((char*)Dataa_per,"%s", (char*)str1);
+                          std::cout << Dataa_per << " " << all << std::endl;
+////////////////////////////////////////////////////////////////
+                          emit valueChanged(TotalNumberOfBytes,
+                                            TotalNumberOfBytes - TotalNumberOfFreeBytes,
+                                            TotalNumberOfFreeBytes,
+                                            atof(Dataa_per));
+/*
+                    std::cout<<buffer<<"       write"<<std::endl<<std::endl;
+                    BOOL iRet = WriteFile(hSerial, buffer, dwSize, &dwBytesWritten, NULL);
+                    // std::cout<<iRet<<std::endl;
+                    if (iRet){
+                    BOOL oRet = ReadFile(hSerial, str, dwSize, &dwBytesRead, NULL);
+                    // std::cout<<oRet<<std::endl;
+                    std::cout<<str<<"       read"<<std::endl<<std::endl;
+                    }
+/*
                     std::cout << "wr:" << std::endl;
                     strr = std::to_string(TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384) + " "
                             + std::to_string(TotalNumberOfBytes) + " "
                             + std::to_string(TotalNumberOfFreeBytes);
                     std::cout << send_to_stm(hSerial, strr) << std::endl;
-                    emit valueChanged(QString::fromStdString(strr));
+/*
+                    const char *strr_ch = strr.c_str();
+                    char firstDigit[50], secondDigit[50], thirdDigit[50];
+                    char *space = strstr(strr_ch, " ");
+                    int digitLen = space - strr_ch;
+                    int otherStringLen = strlen(strr_ch) - digitLen - 1;
+                    snprintf(firstDigit, digitLen + 1, strr_ch);
+
+                    char rest_of_strr[50];
+                    //snprintf(rest_of_rx_buffer, otherStringLen + 1, &space[1]);
+                    strncpy(rest_of_strr, &space[1], otherStringLen + 1);
+
+                    space = strstr(rest_of_strr, " ");
+                    digitLen = space - rest_of_strr;
+                    otherStringLen = strlen(rest_of_strr) - digitLen - 1;
+                    snprintf(secondDigit, digitLen + 1, rest_of_strr);
+                    strncpy(thirdDigit, &space[1], otherStringLen + 1);
+
+*/
 
                 }
 
