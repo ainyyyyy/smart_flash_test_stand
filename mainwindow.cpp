@@ -153,6 +153,8 @@ QString MainWindow::formatBytes(float value) {
 
 
 void MainWindow::onValueChanged(float value1, float value2, float value3, float value4) {
+
+
     ui->label->setText(MainWindow::formatBytes(value1));
     ui->label_2->setText(MainWindow::formatBytes(value2));
     ui->label_2->setStyleSheet("color: rgb(208, 149, 76)");

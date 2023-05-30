@@ -4,6 +4,10 @@
 #include <windows.h>
 #include "tchar.h"
 #include <string.h>
+#include <QFile>
+#include <QTextStream>
+
+#include <QDebug>
 
 CollectData::CollectData(QObject *parent) : QObject(parent)
 {
@@ -30,7 +34,7 @@ void CollectData::main_process()
     DWORD bytesRead, bytesWrite;
     HANDLE hComm, hSerial;
 
-  LPCTSTR sPortName = _T("COM9");
+  LPCTSTR sPortName = _T("COM5");
 hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     // hComm = CreateFileA("\\\\.\\COM3",
     // 		    GENERIC_READ | GENERIC_WRITE,
@@ -55,7 +59,7 @@ unsigned __int64 TotalNumberOfFreeBytes;
 ULARGE_INTEGER free;
 
 
-char *path = "D:\\";
+char *path = "C:\\";
   std::cout << "watching for changes... " << path << std::endl;
 
   HANDLE file = CreateFileA(path,
@@ -113,7 +117,7 @@ char *path = "D:\\";
                     sprintf(buffer,"%s %s", buffer,buffer_occupied);
                     sprintf(buffer,"%s %s", buffer,buffer_all);
                     // strcat(buffer, buffer_mem);
-                    std::cout<<buffer<<std::endl;
+                    //std::cout<<buffer<<std::endl;
 
                     // itoa(data,buffer,20);
                     DCB dcbSerialParams = { 0 };
@@ -133,23 +137,49 @@ char *path = "D:\\";
                     DWORD dwBytesWritten;    // тут будет количество собственно переданных байт
                     DWORD dwBytesRead;
 
-////////////////////////////////////////////////////////////////
-                    a = ((float)(TotalNumberOfBytes - TotalNumberOfFreeBytes)/(float)(TotalNumberOfBytes))/1000;
-                    convert_rx_buff += fabs(a*1000 - rx_buffer2);
-                            all -= fabs(a - rx_buffer1);
-                          rx_buffer1 = a;
-                            rx_buffer2 = a*1000;
-                          uint8_t str1[20];
-                         // uint8_t str2[20];
-                            //strcpy((char*)str1,uint64_to_string(convert_rx_buff));
-                            //sprintf((char*)str2,"%.3f", convert_rx_buff);
-                            sprintf((char*)str1,"%.5f", all);
-                          //strcpy((char*)str1,uint64_to_string(convert_rx_buff));
-                          memset(str, 0, sizeof(str));
-                          sprintf((char*)str,"%s", (char*)str1);
-                          std::cout << str << " " << all << std::endl;
-////////////////////////////////////////////////////////////////
+                    QString in_data;
+                    QString in_data2;
+                    QFile file("data.txt");
+                    //QFile file2("data2.txt");
+                    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+                        {
+                            QTextStream in(&file);
+                            in_data = in.readLine();
+                            in_data2 = in.readLine();
+                            file.close();
+                        }
 
+                    if (in_data != ""){
+                        all = in_data.toFloat();
+                    }
+
+                    if (in_data2 != ""){
+                        rx_buffer1 = in_data2.toFloat();
+                    }
+
+
+                    a = ((float)(TotalNumberOfBytes - TotalNumberOfFreeBytes)/(float)(TotalNumberOfBytes))/1000;
+                    //convert_rx_buff += fabs(a*1000 - rx_buffer2);
+                    all -= fabs(a - rx_buffer1);
+                    rx_buffer1 = a;
+                    //rx_buffer2 = a*1000;
+                    uint8_t str1[20];
+                    // uint8_t str2[20];
+                    //strcpy((char*)str1,uint64_to_string(convert_rx_buff));
+                    //sprintf((char*)str2,"%.3f", convert_rx_buff);
+                    sprintf((char*)str1,"%.5f", all);
+                    //strcpy((char*)str1,uint64_to_string(convert_rx_buff));
+                    memset(str, 0, sizeof(str));
+                    sprintf((char*)str,"%s", (char*)str1);
+
+
+
+                    if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+                        {
+                            QTextStream out(&file);
+                            out << all << "\n" << rx_buffer1;
+                            file.close();
+                        }
 /*
                     std::cout<<buffer<<"       write"<<std::endl<<std::endl;
                     BOOL iRet = WriteFile(hSerial, buffer, dwSize, &dwBytesWritten, NULL);
@@ -160,10 +190,10 @@ char *path = "D:\\";
                     std::cout<<str<<"       read"<<std::endl<<std::endl;
                     }
 */
-                          emit valueChanged(TotalNumberOfBytes,
-                                            TotalNumberOfBytes - TotalNumberOfFreeBytes,
-                                            TotalNumberOfFreeBytes,
-                                            atof(str));
+                    emit valueChanged(TotalNumberOfBytes,
+                                      TotalNumberOfBytes - TotalNumberOfFreeBytes,
+                                      TotalNumberOfFreeBytes,
+                                      atof(str));
 /*
                     std::cout << "wr:" << std::endl;
                     strr = std::to_string(TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384) + " "
