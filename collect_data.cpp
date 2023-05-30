@@ -7,7 +7,6 @@
 #include <QFile>
 #include <QTextStream>
 
-#include <QDebug>
 
 CollectData::CollectData(QObject *parent) : QObject(parent)
 {
@@ -15,13 +14,14 @@ CollectData::CollectData(QObject *parent) : QObject(parent)
 
 void CollectData::main_process()
 {
-///////////////////////////////////////
-    float convert_rx_buff;
+//////////////////////////При наличии расхождений необходимо заменить эти 2 переменные на актуальные (см. README репозитория)
+    char *path = "E:\\";
+    LPCTSTR sPortName = _T("COM5");
+//////////////////////////
+
     float rx_buffer1 = 0;
-    float rx_buffer2 = 0;
     float a;
     float all = 100;
-////////////////////////////////////////
     std::string strr;
     //strr += '\r';
     //strr += '\n';
@@ -34,23 +34,7 @@ void CollectData::main_process()
     DWORD bytesRead, bytesWrite;
     HANDLE hComm, hSerial;
 
-  LPCTSTR sPortName = _T("COM5");
 hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-    // hComm = CreateFileA("\\\\.\\COM3",
-    // 		    GENERIC_READ | GENERIC_WRITE,
-    // 		    0,
-    // 		    NULL,
-    // 		    OPEN_EXISTING,
-    // 		    0,
-    // 		    NULL);
-    // if (hComm == INVALID_HANDLE_VALUE){
-    // 	printf("Error in opening serial port");
-    // 	std::cout << std::endl;
-    // }
-    // else{
-    // 	printf("Opening serial port successful");
-    // 	std::cout << std::endl;
-    // }
 
 //watching files
 
@@ -59,7 +43,6 @@ unsigned __int64 TotalNumberOfFreeBytes;
 ULARGE_INTEGER free;
 
 
-char *path = "C:\\";
   std::cout << "watching for changes... " << path << std::endl;
 
   HANDLE file = CreateFileA(path,
@@ -69,7 +52,6 @@ char *path = "C:\\";
     OPEN_EXISTING,
     FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
     NULL);
-  //assert(file != INVALID_HANDLE_VALUE);
   OVERLAPPED overlapped;
   overlapped.hEvent = CreateEvent(NULL, FALSE, 0, NULL);
 
@@ -180,10 +162,11 @@ char *path = "C:\\";
                             out << all << "\n" << rx_buffer1;
                             file.close();
                         }
-/*
-                    std::cout<<buffer<<"       write"<<std::endl<<std::endl;
+
+                    //std::cout<<buffer<<"       write"<<std::endl<<std::endl;
                     BOOL iRet = WriteFile(hSerial, buffer, dwSize, &dwBytesWritten, NULL);
                     // std::cout<<iRet<<std::endl;
+                    /*
                     if (iRet){
                     BOOL oRet = ReadFile(hSerial, str, dwSize, &dwBytesRead, NULL);
                     // std::cout<<oRet<<std::endl;
