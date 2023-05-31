@@ -15,16 +15,14 @@ CollectData::CollectData(QObject *parent) : QObject(parent)
 void CollectData::main_process()
 {
 //////////////////////////При наличии расхождений необходимо заменить эти 2 переменные на актуальные (см. README репозитория)
-    char *path = "E:\\";
-    LPCTSTR sPortName = _T("COM5");
+    const char *path = "E:\\";
+    LPCTSTR sPortName = _T("COM6");
 //////////////////////////
 
     float rx_buffer1 = 0;
     float a;
     float all = 100;
     std::string strr;
-    //strr += '\r';
-    //strr += '\n';
     char *cstr;
   DWORD TWR = 0;
 
@@ -33,10 +31,8 @@ void CollectData::main_process()
     std::string str = "";
     DWORD bytesRead, bytesWrite;
     HANDLE hComm, hSerial;
-
+//Хэндлер, необходимый для передачи данных по юарту
 hSerial = ::CreateFile(sPortName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-
-//watching files
 
 unsigned __int64 TotalNumberOfBytes;
 unsigned __int64 TotalNumberOfFreeBytes;
@@ -44,7 +40,7 @@ ULARGE_INTEGER free;
 
 
   std::cout << "watching for changes... " << path << std::endl;
-
+//Хэндлер, необходимый для обработки событий изменения данных флешки
   HANDLE file = CreateFileA(path,
     FILE_LIST_DIRECTORY,
     FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -73,24 +69,22 @@ ULARGE_INTEGER free;
           FILE_NOTIFY_INFORMATION *event = (FILE_NOTIFY_INFORMATION*)change_buf;
 
           for (;;) {
-
+//Обработка событий с файлами
                 if((event->Action != FILE_ACTION_ADDED) and (event->Action != FILE_ACTION_RENAMED_OLD_NAME)){
+                    //Получаем данные от winapi об общем объеме памяти и количестве свободного места
                     GetDiskFreeSpaceExA(path,&free,
                     (PULARGE_INTEGER)&TotalNumberOfBytes,
                     (PULARGE_INTEGER)&TotalNumberOfFreeBytes);
 
-//new code
                     char *cstr = &(strr[0]);
-                    // DWORD data = DWORD(TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384);
                     char buffer[50];
                     char buffer_mem_1[15];
                     char buffer_free[15];
                     char buffer_occupied[15];
                     char buffer_all[15];
                     char str[20];
-                    //float cycle = 100000;
-                    // strcpy(buffer, cstr);
-                      // strcat(buffer, "\n\n");
+
+                    //собираем все данные в буфер для последующей передачи
                     snprintf(buffer_mem_1, sizeof buffer_mem_1, "%.10f",(((float)(TotalNumberOfBytes - TotalNumberOfFreeBytes)/(float)(TotalNumberOfBytes))/1000));
                     snprintf(buffer_free, sizeof buffer_free, "%llu",(TotalNumberOfFreeBytes));
                     snprintf(buffer_occupied, sizeof buffer_occupied, "%llu",((TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384)));
@@ -98,10 +92,7 @@ ULARGE_INTEGER free;
                     sprintf(buffer,"%s %s", buffer_mem_1,buffer_free);
                     sprintf(buffer,"%s %s", buffer,buffer_occupied);
                     sprintf(buffer,"%s %s", buffer,buffer_all);
-                    // strcat(buffer, buffer_mem);
-                    //std::cout<<buffer<<std::endl;
 
-                    // itoa(data,buffer,20);
                     DCB dcbSerialParams = { 0 };
                     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
                     if(!GetCommState(hSerial, &dcbSerialParams)){
@@ -114,11 +105,11 @@ ULARGE_INTEGER free;
                     if(!SetCommState(hSerial, &dcbSerialParams)){
                         std::cout << "error setting serial port state\n";
                     }
-                    // char data[] = {dbcc_size};  // строка для передачи
                     DWORD dwSize = sizeof(buffer);   // размер этой строки
                     DWORD dwBytesWritten;    // тут будет количество собственно переданных байт
                     DWORD dwBytesRead;
 
+                    //создаем файл для записи
                     QString in_data;
                     QString in_data2;
                     QFile file("data.txt");
@@ -131,6 +122,7 @@ ULARGE_INTEGER free;
                             file.close();
                         }
 
+                    //проверяем, записано ли уже что-то в файл
                     if (in_data != ""){
                         all = in_data.toFloat();
                     }
@@ -140,6 +132,7 @@ ULARGE_INTEGER free;
                     }
 
 
+                    //расчет оставшегося ресурса для вывода на экран
                     a = ((float)(TotalNumberOfBytes - TotalNumberOfFreeBytes)/(float)(TotalNumberOfBytes))/1000;
                     //convert_rx_buff += fabs(a*1000 - rx_buffer2);
                     all -= fabs(a - rx_buffer1);
@@ -163,26 +156,14 @@ ULARGE_INTEGER free;
                             file.close();
                         }
 
-                    //std::cout<<buffer<<"       write"<<std::endl<<std::endl;
+                    //отправка данных по UART
                     BOOL iRet = WriteFile(hSerial, buffer, dwSize, &dwBytesWritten, NULL);
-                    // std::cout<<iRet<<std::endl;
-                    /*
-                    if (iRet){
-                    BOOL oRet = ReadFile(hSerial, str, dwSize, &dwBytesRead, NULL);
-                    // std::cout<<oRet<<std::endl;
-                    std::cout<<str<<"       read"<<std::endl<<std::endl;
-                    }
-*/
+
+                    //выработка сигнала об обновлении значений
                     emit valueChanged(TotalNumberOfBytes,
                                       TotalNumberOfBytes - TotalNumberOfFreeBytes,
                                       TotalNumberOfFreeBytes,
                                       atof(str));
-/*
-                    std::cout << "wr:" << std::endl;
-                    strr = std::to_string(TotalNumberOfBytes - TotalNumberOfFreeBytes - 16384) + " "
-                            + std::to_string(TotalNumberOfBytes) + " "
-                            + std::to_string(TotalNumberOfFreeBytes);
-                    std::cout << send_to_stm(hSerial, strr) << std::endl;
 /*
                     const char *strr_ch = strr.c_str();
                     char firstDigit[50], secondDigit[50], thirdDigit[50];
@@ -205,7 +186,6 @@ ULARGE_INTEGER free;
 
                 }
 
-                // Are there more events to handle?
                if (event->NextEntryOffset) {
                   *((uint8_t**)&event) += event->NextEntryOffset;
                 } else {
@@ -214,21 +194,7 @@ ULARGE_INTEGER free;
 
 
           }
-/*
-                std::cout << "TotalNumberOfBytes:" << std::endl;
-                strr = std::to_string(TotalNumberOfBytes);
-                std::cout << send_to_stm(hSerial, strr) << std::endl;
 
-
-                    std::cout << "TotalNumberOfFreeBytes:" << std::endl;
-                    strr = std::to_string(TotalNumberOfFreeBytes);
-                    std::cout << send_to_stm(hSerial, strr) << std::endl;
-*/
-
-
-
-
-          // Queue the next event
           BOOL success = ReadDirectoryChangesW(
                 file, change_buf, 1024, TRUE,
                 FILE_NOTIFY_CHANGE_FILE_NAME  |
@@ -238,7 +204,6 @@ ULARGE_INTEGER free;
 
         }
 
-        // Do other loop stuff here...
   }
     CloseHandle(hComm);
     emit finished();
